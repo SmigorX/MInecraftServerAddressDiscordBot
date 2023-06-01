@@ -1,2 +1,2 @@
 # MInecraftServerAddressDiscordBot
-Bot to send current address of a minecraft server
+Bot to send the current address of a minecraft server
