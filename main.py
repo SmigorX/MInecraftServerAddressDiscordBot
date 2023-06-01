@@ -14,7 +14,7 @@ bot = commands.Bot(intents=intents, command_prefix="!")
 async def getIp(ctx):
     try:
         request = requests.get(requestUri)
-        public_url = request['tunnels'][0]['public_url']
+        public_url = request['tunnels'][0]['public_url'][6:]
         await ctx.send(public_url)
     except Exception:
         await ctx.send(":skull:")
