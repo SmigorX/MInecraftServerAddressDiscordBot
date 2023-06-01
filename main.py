@@ -13,7 +13,7 @@ bot = commands.Bot(intents=intents, command_prefix="!")
 @bot.hybrid_command(name='get_ip', description='Current ip of the minecraft server')
 async def getIp(ctx):
     try:
-        request = requests.get(requestUri)
+        request = requests.get(requestUri).body
         public_url = request['tunnels'][0]['public_url'][6:]
         await ctx.send(public_url)
     except Exception:
