@@ -95,7 +95,7 @@ class ServerCog(commands.Cog):
         """
         await self.bot.wait_until_ready()
 
-    @commands.hybrid_command(name='get_ip', description='Current ip of the minecraft server')
+    @commands.hybrid_command(name='get ip', description='Current ip of the minecraft server')
     async def getIp(self, ctx):
         """
         Command for getting servers current ip
