@@ -118,6 +118,8 @@ class ServerCog(commands.Cog):
             self.bot.update_url()
             await ctx.send(self.bot.public_url, ephemeral=True)
         except Exception:
+            logging.exception("Catched exception:")
+            logging.info(type(self))
             await ctx.send("Failed miserably :skull:", ephemeral=True)
 
 if __name__ == "__main__":
