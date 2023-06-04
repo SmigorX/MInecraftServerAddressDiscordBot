@@ -78,15 +78,16 @@ class ServerCog(commands.Cog):
             self.bot.update_url()
         except Exception:
             self.bot.public_url = None
-        while True:
-            if self.bot.public_url is not None:
-                try:
-                    server = JavaServer.lookup(self.bot.public_url)
-                    status = server.status()
-                    presence = f" {status.players.online} player(s) online, latency {round(status.latency, 2)} ms"
-                except Exception:
-                    presence = "mcstatus not fetched 💀"
-            await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name=presence))
+        
+        if self.bot.public_url is not None:
+            try:
+                server = JavaServer.lookup(self.bot.public_url)
+                status = server.status()
+                presence = f" {status.players.online} player(s) online, latency {round(status.latency, 2)} ms"
+            except Exception:
+                presence = "mcstatus not fetched 💀"
+        
+        await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name=presence))
 
     @status.before_loop
     async def status_setup(self):
