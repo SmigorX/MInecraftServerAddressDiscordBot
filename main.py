@@ -1,67 +1,82 @@
-import requests
-import discord
+# builtins
 import datetime, time
 import logging
 import os
 
+from typing import Optional
+
+# 3rd party imports
+import requests
+import discord
+
+from discord import utils
 from discord.ext import commands
 from discord.ext.tasks import loop
 from mcstatus import JavaServer
 
+# modules
 from configuration import debug
 
 
 class ServerBot(commands.Bot):
     def __init__(self):
-
-        # from configuration import bot_token, requestUri
         self._bot_token = __import__("configuration").bot_token
         self._requestUri = __import__("configuration").requestUri
-
-        # del bot_token
-        # del requestUri
-
-        self.public_url = ""
 
         intents = discord.Intents.default()
         intents.message_content = True
         super().__init__(intents=intents, command_prefix="!")
 
+    @property
+    def public_url(self):
+        """
+        Function to fetch public server url as class attribute
+
+        :returns: public server url fetched from Ngrok, or None if server isn't live
+        :rtype: Optional[str]
+        """
+        try:
+            response = requests.get(self._requestUri).json()
+            logging.debug(response)
+            public_url = response['tunnels'][0]['public_url'][6:]
+        # Catch exceptions signaling server not being live
+        except (requests.exceptions.ConnectionError, KeyError, IndexError):
+            return None
+        return public_url
+
+
     def start_bot(self):
         self.run(self._bot_token)
 
     async def on_ready(self):
+        """
+        When bot connects to API add cog to its tree and sync it, then setup logging handler
+        """
+        self.setup_logging()
+
         await self.add_cog(ServerCog(self))
+        logging.info(f"Synced new tree containing: {len(self.tree.get_commands())}")
         await self.tree.sync()
-        try:
-            self.setup_logging()
-        except:
-            logging.warning("Custom handler setup failed, falling back to default handler")
-        # await bot.loop.create_task(status())
-    
+
+    async def on_error(self, event_method: str, *args) -> None:
+        """
+        Stores uncaught exception traceback in log
+        """
+        logging.exception("Reporting uncaught exception:")
+
     @staticmethod
     def setup_logging():
         """
         Creates new file for log, and sets it as default log handler
         """
-        from discord import utils
-
+        # Create dir for logs if it doesn't exist
         if not os.path.exists('./logs'):
             os.mkdir('./logs')
 
+        # Creates new log file in ./logs named with current Unix timestamp
         handler = logging.FileHandler(
             f"./logs/MinecraftServerStatus_{time.mktime(datetime.datetime.utcnow().timetuple())}.log", "a+")
-        utils.setup_logging(handler=handler, level=logging.INFO if debug else logging.WARN)
-
-    def update_url(self):
-        """
-        Helper function to get current server IP from Ngrok
-
-        :returns: None, updates class attribute
-        """
-        response = requests.get(self._requestUri).json()
-        print(response)
-        self.public_url = response['tunnels'][0]['public_url'][6:]
+        utils.setup_logging(handler=handler, level=logging.DEBUG if debug else logging.INFO)
 
 
 class ServerCog(commands.Cog):
@@ -76,19 +91,12 @@ class ServerCog(commands.Cog):
 
         Gets current server status using
         """
-        presence = ""  # Presence will be reseted every loop
         try:
-            self.bot.update_url()
-        except Exception:
-            self.bot.public_url = None
-        
-        if self.bot.public_url is not None:
-            try:
-                server = JavaServer.lookup(self.bot.public_url)
-                status = server.status()
-                presence = f" {status.players.online} player(s) online, latency {round(status.latency, 2)} ms"
-            except Exception:
-                presence = "mcstatus not fetched :skull:"
+            server = JavaServer.lookup(self.bot.public_url)
+            status = server.status()
+            presence = f" {status.players.online} player(s) online, latency {round(status.latency, 2)} ms"
+        except TypeError:  # Caught when public_url is unavailable
+            presence = "Server unavailable :skull:"
         
         await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name=presence))
 
@@ -98,7 +106,6 @@ class ServerCog(commands.Cog):
         Wait for bot to startup before starting loop
         """
         await self.bot.wait_until_ready()
-
 
     """
     Functions 'get' and 'getIp' are a workaround to get spaces in discord commands
@@ -117,12 +124,16 @@ class ServerCog(commands.Cog):
         """
         Command in a group for getting servers current ip
         """
+        tmp = "We couldn't handle this :skull:"
         try:
-            self.bot.update_url()
-            await ctx.send(self.bot.public_url, ephemeral=True)
-        except Exception:
+            assert (tmp := self.bot.public_url)
+            await ctx.send(tmp, ephemeral=True)
+        except AssertionError:
             logging.exception("Catched exception:")
-            await ctx.send("Failed miserably :skull:", ephemeral=True)
+            tmp = "Failed miserably :skull:"
+        finally:
+            await ctx.send(tmp, ephemeral=True)
+
 
 if __name__ == "__main__":
     bot = ServerBot()
