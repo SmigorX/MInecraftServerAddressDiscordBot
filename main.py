@@ -88,7 +88,7 @@ class ServerCog(commands.Cog):
                 status = server.status()
                 presence = f" {status.players.online} player(s) online, latency {round(status.latency, 2)} ms"
             except Exception:
-                presence = "mcstatus not fetched 💀"
+                presence = "mcstatus not fetched :skull:"
         
         await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name=presence))
 
@@ -112,7 +112,7 @@ class ServerCog(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.send("Invalid command")
 
-    @get.hybrid_command(name='ip', description='Current IP of the minecraft server')
+    @get.command(name='ip', description='Current IP of the minecraft server')
     async def getIp(self, ctx):
         """
         Command in a group for getting servers current ip
