@@ -61,7 +61,7 @@ class ServerBot(commands.Bot):
         """
         response = requests.get(self._requestUri).json()
         print(response)
-        self.bot.public_url = response['tunnels'][0]['public_url'][6:]
+        self.public_url = response['tunnels'][0]['public_url'][6:]
 
 
 class ServerCog(commands.Cog):
@@ -104,7 +104,7 @@ class ServerCog(commands.Cog):
     Functions 'get' and 'getIp' are a workaround to get spaces in discord commands
     We create a group "get" that has only one command "ip" this works as if we had one command "get ip"
     """
-    @commands.group(name='get', description='Get information about')
+    @commands.hybrid_group(name='get', description='Get information about')
     async def get(self, ctx):
         """
         Command group for getting servers current ip
@@ -112,7 +112,7 @@ class ServerCog(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.send("Invalid command")
 
-    @get.command(name='ip', description='Current IP of the minecraft server')
+    @get.hybrid_command(name='ip', description='Current IP of the minecraft server')
     async def getIp(self, ctx):
         """
         Command in a group for getting servers current ip
@@ -122,7 +122,6 @@ class ServerCog(commands.Cog):
             await ctx.send(self.bot.public_url, ephemeral=True)
         except Exception:
             logging.exception("Catched exception:")
-            logging.info(type(self))
             await ctx.send("Failed miserably :skull:", ephemeral=True)
 
 if __name__ == "__main__":
