@@ -88,7 +88,7 @@ class ServerCog(commands.Cog):
                 status = server.status()
                 presence = f" {status.players.online} player(s) online, latency {round(status.latency, 2)} ms"
             except Exception:
-                presence = "mcstatus not fetched ??"
+                presence = "mcstatus not fetched :skull:"
         
         await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name=presence))
 
