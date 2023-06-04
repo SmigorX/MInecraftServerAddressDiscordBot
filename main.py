@@ -124,12 +124,7 @@ class ServerCog(commands.Cog):
         """
         Command in a group for getting servers current ip
         """
-        tmp = "We couldn't handle this :skull:"
-        try:
-            assert (tmp := self.bot.public_url)
-            await ctx.send(tmp, ephemeral=True)
-        except AssertionError:
-            logging.exception("Catched exception:")
+        if (tmp := self.bot.public_url) is None:
             tmp = "Failed miserably :skull:"
         finally:
             await ctx.send(tmp, ephemeral=True)
