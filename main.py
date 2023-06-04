@@ -8,6 +8,8 @@ from discord.ext import commands
 from discord.ext.tasks import loop
 from mcstatus import JavaServer
 
+from configuration import debug
+
 
 class ServerBot(commands.Bot):
     def __init__(self):
@@ -36,8 +38,9 @@ class ServerBot(commands.Bot):
         except:
             logging.warning("Custom handler setup failed, falling back to default handler")
         # await bot.loop.create_task(status())
-
-    def setup_logging(self):
+    
+    @staticmethod
+    def setup_logging():
         """
         Creates new file for log, and sets it as default log handler
         """
@@ -48,7 +51,7 @@ class ServerBot(commands.Bot):
 
         handler = logging.FileHandler(
             f"./logs/MinecraftServerStatus_{time.mktime(datetime.datetime.utcnow().timetuple())}.log", "a+")
-        utils.setup_logging(handler=handler)
+        utils.setup_logging(handler=handler, level=logging.INFO if debug else logging.WARN)
 
     def update_url(self):
         """
