@@ -8,6 +8,8 @@ from discord.ext import commands
 from discord.ext.tasks import loop
 from mcstatus import JavaServer
 
+from configuration import debug
+
 
 class ServerBot(commands.Bot):
     def __init__(self):
@@ -36,8 +38,9 @@ class ServerBot(commands.Bot):
         except:
             logging.warning("Custom handler setup failed, falling back to default handler")
         # await bot.loop.create_task(status())
-
-    def setup_logging(self):
+    
+    @staticmethod
+    def setup_logging():
         """
         Creates new file for log, and sets it as default log handler
         """
@@ -48,7 +51,7 @@ class ServerBot(commands.Bot):
 
         handler = logging.FileHandler(
             f"./logs/MinecraftServerStatus_{time.mktime(datetime.datetime.utcnow().timetuple())}.log", "a+")
-        utils.setup_logging(handler=handler)
+        utils.setup_logging(handler=handler, level=logging.INFO if debug else logging.WARN)
 
     def update_url(self):
         """
@@ -58,7 +61,7 @@ class ServerBot(commands.Bot):
         """
         response = requests.get(self._requestUri).json()
         print(response)
-        self.bot.public_url = response['tunnels'][0]['public_url'][6:]
+        self.public_url = response['tunnels'][0]['public_url'][6:]
 
 
 class ServerCog(commands.Cog):
@@ -101,7 +104,7 @@ class ServerCog(commands.Cog):
     Functions 'get' and 'getIp' are a workaround to get spaces in discord commands
     We create a group "get" that has only one command "ip" this works as if we had one command "get ip"
     """
-    @commands.group(name='get', description='Get information about')
+    @commands.hybrid_group(name='get', description='Get information about')
     async def get(self, ctx):
         """
         Command group for getting servers current ip
@@ -109,7 +112,7 @@ class ServerCog(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.send("Invalid command")
 
-    @get.command(name='ip', description='Current IP of the minecraft server')
+    @get.hybrid_command(name='ip', description='Current IP of the minecraft server')
     async def getIp(self, ctx):
         """
         Command in a group for getting servers current ip
@@ -118,6 +121,7 @@ class ServerCog(commands.Cog):
             self.bot.update_url()
             await ctx.send(self.bot.public_url, ephemeral=True)
         except Exception:
+            logging.exception("Catched exception:")
             await ctx.send("Failed miserably :skull:", ephemeral=True)
 
 if __name__ == "__main__":
