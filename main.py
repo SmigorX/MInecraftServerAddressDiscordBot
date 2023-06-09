@@ -126,8 +126,7 @@ class ServerCog(commands.Cog):
         """
         if (tmp := self.bot.public_url) is None:
             tmp = "Failed miserably :skull:"
-        finally:
-            await ctx.send(tmp, ephemeral=True)
+        await ctx.send(tmp, ephemeral=True)
 
 
 if __name__ == "__main__":
