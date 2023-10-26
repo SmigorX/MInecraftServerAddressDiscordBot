@@ -12,5 +12,5 @@ idna==3.4
 mcstatus==10.0.3
 multidict==6.0.4
 requests==2.31.0
-urllib3==2.0.2
+urllib3==2.0.7
 yarl==1.9.2
